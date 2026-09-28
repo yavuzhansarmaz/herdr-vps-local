@@ -1,0 +1,15 @@
+# Copy to $(herdr plugin config-dir vps.local)/config.toml and edit.
+# mutagen = "/custom/path/to/mutagen"   # optional binary override
+
+[[sessions]]
+name = "pizero-test"
+alpha = "/tmp/mutagen-pizero-test"
+beta = "pizero:mutagen-test"
+ignore = ["*.tmp"]
+
+# [[sessions]]
+# name = "bud"
+# alpha = "~/Desktop/PP/bud"
+# beta = "vps:~/repos/bud"
+# mode = "two-way-safe"
+# ignore = ["node_modules", ".venv", "__pycache__", "target"]

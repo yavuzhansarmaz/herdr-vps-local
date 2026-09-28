@@ -1,0 +1,18 @@
+id = "vps.local"
+name = "VPS Local"
+version = "0.1.0"
+min_herdr_version = "0.9.0"
+description = "Local experience on remote machines: VPS/Pi repos mirrored to your laptop via Mutagen, sessions ensured on every server start"
+platforms = ["linux", "macos"]
+
+[[build]]
+command = ["cargo", "build", "--release"]
+
+[[startup]]
+command = ["./target/release/herdr-vps-local", "ensure"]
+
+[[actions]]
+id = "status"
+title = "VPS Local sync status"
+contexts = ["workspace"]
+command = ["./target/release/herdr-vps-local", "status"]
