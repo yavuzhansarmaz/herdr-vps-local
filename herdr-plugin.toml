@@ -16,3 +16,9 @@ id = "status"
 title = "VPS Local sync status"
 contexts = ["workspace"]
 command = ["./target/release/herdr-vps-local", "status"]
+
+[[actions]]
+id = "ensure-now"
+title = "Ensure sync sessions now"
+contexts = ["workspace"]
+command = ["./target/release/herdr-vps-local", "ensure"]

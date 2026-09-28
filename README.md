@@ -34,8 +34,9 @@ mirrors a local directory (alpha) with a remote directory (beta):
 This plugin is the glue: a Herdr startup hook runs `ensure` after every
 server start (e.g. reboot), which starts the daemon, creates missing local
 dirs, creates missing sessions, and resumes paused ones. A `status` action
-prints each configured session's state. Session definitions live in the
-plugin config, not in code.
+prints each configured session's state and conflict count, e.g.
+`bud: Watching for changes, conflicts: 0 (alpha <-> beta)`.
+Session definitions live in the plugin config, not in code.
 
 ## Measured latency
 
@@ -124,11 +125,73 @@ ignore = ["node_modules", ".venv", "__pycache__", "target"]
 Remote endpoints need passwordless SSH and accept Mutagen's auto-deployed
 agent (Linux/macOS, x86_64/aarch64/armv7).
 
+Instead of editing the file by hand, add a session from the command line
+(run from the plugin directory; find it with `herdr plugin list`).
+This appends to `config.toml` (creating the file and parent directories if
+needed) and creates the sync immediately:
+
+```bash
+./target/release/herdr-vps-local add bud ~/Desktop/PP/bud vps:~/repos/bud \
+  --mode two-way-safe \
+  --ignore node_modules --ignore .venv --ignore __pycache__ --ignore target
+```
+
+Adding a name that already exists fails without changing anything. Note that
+`add` rewrites `config.toml`, so comments and formatting in that file are not
+preserved.
+
 Check after a restart:
 
 ```bash
 herdr plugin log list --plugin vps.local
 mutagen sync list
+```
+
+## Herdr UI actions
+
+The plugin exposes two workspace actions in the Herdr UI: "VPS Local sync status" prints each configured session's state, and "Ensure sync sessions now" runs the same ensure check as server startup (starting the daemon and creating or resuming missing sessions) without restarting Herdr.
+
+## Troubleshooting
+
+- `Mutagen is required but ... could not be executed`: install Mutagen from
+  https://mutagen.io or via your package manager, make sure it is on `PATH`
+  (or pass `--mutagen PATH`), and re-run.
+- `could not start the Mutagen daemon: ...`: the daemon itself failed; read
+  the trailing detail, try `mutagen daemon stop`, then re-run `ensure`.
+- `HINT: ... check that 'ssh <target>' works non-interactively`: the remote
+  is unreachable or SSH auth failed; fix key auth and host keys for that
+  target (test with `ssh <target> true`), then re-run `ensure`.
+
+## Periodic re-check (optional)
+
+`ensure` runs on Herdr server start, but Herdr has no timer hooks for
+plugins: a session that dies mid-day stays down until the next restart.
+For daytime self-healing, run `ensure` on a schedule; for a one-off check,
+use the `ensure-now` UI action ("Ensure sync sessions now").
+Minimal systemd --user example (`plugin install` users: adapt the binary
+path to your plugin dir from `herdr plugin list`):
+
+`~/.config/systemd/user/vps-local-ensure.service`:
+```ini
+[Unit]
+Description=Re-check VPS Local sync sessions
+[Service]
+Type=oneshot
+ExecStart=%h/.local/share/herdr-plugins/herdr-vps-local/target/release/herdr-vps-local ensure
+```
+`~/.config/systemd/user/vps-local-ensure.timer`:
+```ini
+[Unit]
+Description=Re-check VPS Local sync sessions every 15 minutes
+[Timer]
+OnCalendar=*:0/15
+Persistent=true
+[Install]
+WantedBy=timers.target
+```
+```bash
+systemctl --user daemon-reload
+systemctl --user enable --now vps-local-ensure.timer
 ```
 
 ## Compatibility
