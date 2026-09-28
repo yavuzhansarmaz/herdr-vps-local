@@ -84,6 +84,13 @@ editing. In practice that means:
 - **Clean offboarding of access**: revoking SSH and terminating sessions
   cuts a machine off; no work state stranded on personal hardware.
 
+Remote-first companies get the most out of this shape. Engineers contribute
+from home networks and personal hardware while builds, tests, agents, and
+credentials never leave company infrastructure. Laptops sleep, roam between
+networks, and go offline — the server keeps running the work and mirrors
+catch up on reconnect, so async handoffs across timezones never lose state.
+Onboarding is a laptop plus SSH access; offboarding is revoking it.
+
 Note the honest boundary: mirrors do contain file bytes, so this hardens
 *execution and secrets*, not file visibility. Teams with stricter needs can
 combine it with one-way modes, narrower sync scopes, or disk encryption on
